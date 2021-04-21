@@ -28,11 +28,14 @@ const StyledTableRow = withStyles((theme) => ({
 }))(TableRow);
 
 let counter = 1;
-function createData(exchange, price, amount) {
+function createData(tick) {
+  const { p:price, q:amount_without_signal, m:market } = tick.data;
+  const amount = market ? amount_without_signal : amount_without_signal*-1;
+
   return {
     key: counter++,
-    exchange,
-    price: Math.round((price + Number.EPSILON) * 100) / 100,
+    exchange: "binance",
+    price,
     amount,
   };
 }
@@ -50,12 +53,12 @@ export default function App() {
 
   useEffect(() => {
     // ['bitfinex', 23320, 0.00012313]
-    webSocket.current = new WebSocket("wss://c.tegila.com.br/wss");
+    webSocket.current = new WebSocket("wss://fstream.binance.com/stream?streams=btcusdt@trade");
     webSocket.current.onmessage = (row) => {
       // console.log(row);
       const tick = JSON.parse(row.data);
-      // console.log(tick);
-      setRows((prev) => [createData(...tick), ...prev]);
+      //console.log(tick);
+      setRows((prev) => [createData(tick), ...prev]);
     };
     return () => webSocket.current.close();
   }, []);
